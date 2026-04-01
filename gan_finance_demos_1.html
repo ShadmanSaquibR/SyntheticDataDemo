@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GANs in Finance — Interactive Demos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A112A;
+  --surface: #222227;
+  --surface2: #2A2A30;
+  --border: rgba(185, 217, 235, 0.15);
+  --text: #ffffff;
+  --muted: #B9D9EB;
+  --accent: #4828FF;
+  --accent2: #5EF38C;
+  --red: #4828FF;
+  --green: #5EF38C;
+  --generator: #5EF38C;
+  --discriminator: #4828FF;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.grain {
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.team-badge {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 100;
+  transition: border-color 0.2s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.team-badge:hover {
+  border-color: var(--accent2);
+}
+
+.team-badge span {
+  color: var(--accent2);
+  font-weight: 500;
+}
+
+header {
+  text-align: center;
+  padding: 80px 20px 40px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 46px;
+  font-weight: 300;
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+}
+
+header h1 span { color: var(--accent2); }
+
+header p {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+nav button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 10px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+nav button:hover { 
+  border-color: var(--accent); 
+  color: var(--text); 
+}
+
+nav button.active {
+  background: var(--accent);
+  color: var(--text);
+  border-color: var(--accent);
+  font-weight: 500;
+  box-shadow: 0 0 15px rgba(72, 40, 255, 0.4);
+}
+
+.demo-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 50px 20px;
+}
+
+.demo { display: none; }
+.demo.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.demo-header {
+  margin-bottom: 32px;
+}
+
+.demo-header h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.demo-header .tag {
+  display: inline-block;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.demo-header p {
+  color: var(--muted);
+  margin-top: 12px;
+  max-width: 750px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.canvas-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.canvas-wrap canvas {
+  width: 100%;
+  height: 380px;
+  display: block;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.controls button {
+  background: var(--accent2);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(94, 243, 140, 0.2);
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.controls button:hover { 
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(94, 243, 140, 0.3);
+}
+
+.controls button.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.controls button.secondary:hover {
+  background: var(--surface2);
+  border-color: var(--muted);
+}
+
+.controls label {
+  color: var(--muted);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+}
+
+.controls input[type="range"] {
+  width: 130px;
+  accent-color: var(--accent2);
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.stat-card .label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.stat-card .value {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.explanation {
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 24px;
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.explanation strong { color: var(--text); }
+
+@media (max-width: 700px) {
+  header h1 { font-size: 34px; }
+  .team-badge { position: relative; top: 0; right: 0; display: inline-block; margin-bottom: 20px; }
+  .canvas-wrap canvas { height: 280px; }
+  .controls { flex-direction: column; align-items: stretch; }
+  .controls label { margin-left: 0; justify-content: space-between; }
+  .controls input[type="range"] { width: 60%; }
+}
+
+.epoch-display {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<div class="team-badge">Team <span>Out of Options</span></div>
+
+<header>
+  <h1>GANs in <span>Finance</span></h1>
+  <p>Interactive toy examples demonstrating how Generative Adversarial Networks can be applied to quantitative finance problems</p>
+</header>
+
+<nav>
+  <button class="active" onclick="showDemo(0)">01 — Synthetic Returns</button>
+  <button onclick="showDemo(1)">02 — Volatility Smile</button>
+  <button onclick="showDemo(2)">03 — Scenario Gen</button>
+  <button onclick="showDemo(3)">04 — Anomaly Detect</button>
+</nav>
+
+<div class="demo-container">
+
+<div class="demo active" id="demo0">
+  <div class="demo-header">
+    <h2>Synthetic Return Distribution</h2>
+    <span class="tag">Data Augmentation</span>
+    <span class="tag">Risk Modeling</span>
+    <p>A GAN learns to generate synthetic stock return distributions that match the statistical properties of real market data — including fat tails and skewness that normal distributions miss.</p>
+  </div>
+  <div class="controls">
+    <button onclick="runDemo0()">▶ Train GAN</button>
+    <button class="secondary" onclick="resetDemo0()">Reset</button>
+    <label>Speed <input type="range" id="speed0" min="1" max="10" value="5"></label>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Epoch</div><div class="value" id="epoch0">0</div></div>
+    <div class="stat-card"><div class="label">G Loss</div><div class="value" id="gloss0">—</div></div>
+    <div class="stat-card"><div class="label">D Loss</div><div class="value" id="dloss0">—</div></div>
+    <div class="stat-card"><div class="label">KL Div</div><div class="value" id="kl0">—</div></div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--muted)"></span> Real Returns</span>
+    <span><span class="dot" style="background:var(--accent2)"></span> GAN-Generated</span>
+    <span><span class="dot" style="background:var(--accent)"></span> Normal Dist</span>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="canvas0"></canvas>
+    <div class="epoch-display" id="epochLabel0">Epoch 0</div>
+  </div>
+  <div class="explanation">
+    <strong>Why this matters:</strong> Real financial returns exhibit fat tails — extreme events occur far more frequently than a Gaussian model predicts. GANs can learn these complex distributions directly from data, generating realistic synthetic samples for stress testing, backtesting strategies on augmented datasets, and improving VaR estimates without restrictive parametric assumptions.
+  </div>
+</div>
+
+<div class="demo" id="demo1">
+  <div class="demo-header">
+    <h2>Volatility Smile Generation</h2>
+    <span class="tag">Derivatives Pricing</span>
+    <span class="tag">Options</span>
+    <p>A GAN learns the shape of the implied volatility smile across strikes, producing realistic surfaces for options pricing and hedging.</p>
+  </div>
+  <div class="controls">
+    <button onclick="runDemo1()">▶ Train GAN</button>
+    <button class="secondary" onclick="resetDemo1()">Reset</button>
+    <label>Speed <input type="range" id="speed1" min="1" max="10" value="5"></label>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Epoch</div><div class="value" id="epoch1">0</div></div>
+    <div class="stat-card"><div class="label">G Loss</div><div class="value" id="gloss1">—</div></div>
+    <div class="stat-card"><div class="label">D Loss</div><div class="value" id="dloss1">—</div></div>
+    <div class="stat-card"><div class="label">MSE</div><div class="value" id="mse1">—</div></div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--muted)"></span> Market Implied Vol</span>
+    <span><span class="dot" style="background:var(--accent2)"></span> GAN-Generated</span>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="canvas1"></canvas>
+    <div class="epoch-display" id="epochLabel1">Epoch 0</div>
+  </div>
+  <div class="explanation">
+    <strong>Why this matters:</strong> The implied volatility smile is a key market phenomenon that Black-Scholes cannot capture. GANs can learn to generate realistic volatility surfaces, enabling more accurate options pricing, better hedging strategies, and synthetic market environments for testing exotic derivatives models.
+  </div>
+</div>
+
+<div class="demo" id="demo2">
+  <div class="demo-header">
+    <h2>Correlated Scenario Generation</h2>
+    <span class="tag">Risk Management</span>
+    <span class="tag">Monte Carlo</span>
+    <p>A GAN generates realistic multi-asset return scenarios that preserve the correlation structure between assets — critical for portfolio risk management.</p>
+  </div>
+  <div class="controls">
+    <button onclick="runDemo2()">▶ Train GAN</button>
+    <button class="secondary" onclick="resetDemo2()">Reset</button>
+    <label>Speed <input type="range" id="speed2" min="1" max="10" value="5"></label>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Epoch</div><div class="value" id="epoch2">0</div></div>
+    <div class="stat-card"><div class="label">Real Corr(ρ)</div><div class="value" id="realcorr2" style="color:var(--muted)">0.72</div></div>
+    <div class="stat-card"><div class="label">Gen Corr(ρ)</div><div class="value" id="gencorr2" style="color:var(--accent2)">—</div></div>
+    <div class="stat-card"><div class="label">Corr Error</div><div class="value" id="cerr2">—</div></div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--muted)"></span> Real Scenarios</span>
+    <span><span class="dot" style="background:var(--accent2)"></span> GAN-Generated</span>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="canvas2"></canvas>
+    <div class="epoch-display" id="epochLabel2">Epoch 0</div>
+  </div>
+  <div class="explanation">
+    <strong>Why this matters:</strong> Traditional Monte Carlo uses multivariate normal assumptions that fail during market stress. GANs capture nonlinear dependencies between assets (e.g., correlations spike during crashes), producing more realistic tail scenarios for portfolio VaR, CVaR, and stress testing.
+  </div>
+</div>
+
+<div class="demo" id="demo3">
+  <div class="demo-header">
+    <h2>Anomaly Detection in Time Series</h2>
+    <span class="tag">Fraud Detection</span>
+    <span class="tag">Market Surveillance</span>
+    <p>A GAN learns "normal" price behavior. Points where the discriminator assigns low probability are flagged as anomalies — potential manipulation or regime changes.</p>
+  </div>
+  <div class="controls">
+    <button onclick="runDemo3()">▶ Run Detection</button>
+    <button class="secondary" onclick="resetDemo3()">Reset</button>
+    <label>Threshold <input type="range" id="threshold3" min="1" max="9" value="5" oninput="updateThreshold3()"></label>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Data Points</div><div class="value" id="npoints3">200</div></div>
+    <div class="stat-card"><div class="label">Anomalies</div><div class="value" id="nanom3" style="color:var(--accent)">—</div></div>
+    <div class="stat-card"><div class="label">Threshold</div><div class="value" id="thresh3">0.50</div></div>
+    <div class="stat-card"><div class="label">Phase</div><div class="value" id="phase3" style="font-size:18px">Idle</div></div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--accent2)"></span> Normal</span>
+    <span><span class="dot" style="background:var(--accent)"></span> Anomaly</span>
+    <span><span class="dot" style="background:var(--accent2);opacity:0.3"></span> D(x) Score</span>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="canvas3"></canvas>
+  </div>
+  <div class="explanation">
+    <strong>Why this matters:</strong> By training on "normal" market behavior, the GAN's discriminator becomes a novelty detector. Unusual patterns — flash crashes, spoofing, wash trading, or regime shifts — receive low discriminator scores, enabling automated surveillance systems that adapt to evolving market microstructure.
+  </div>
+</div>
+
+</div>
+
+<script>
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function fatTailRandom() {
+  const u = Math.random();
+  if (u < 0.05) return randn() * 3.5;
+  if (u < 0.12) return randn() * 2.2;
+  return randn() * 0.9 + (Math.random() < 0.5 ? -0.15 : 0);
+}
+
+function dpr() { return window.devicePixelRatio || 1; }
+
+function setupCanvas(canvas) {
+  const r = dpr();
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * r;
+  canvas.height = rect.height * r;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(r, r);
+  return { ctx, w: rect.width, h: rect.height };
+}
+
+function showDemo(idx) {
+  document.querySelectorAll('.demo').forEach((d, i) => d.classList.toggle('active', i === idx));
+  document.querySelectorAll('nav button').forEach((b, i) => b.classList.toggle('active', i === idx));
+}
+
+let anim0 = null;
+
+function generateRealReturns(n) {
+  const returns = [];
+  for (let i = 0; i < n; i++) returns.push(fatTailRandom());
+  return returns;
+}
+
+function histogram(data, bins, min, max) {
+  const counts = new Array(bins).fill(0);
+  const bw = (max - min) / bins;
+  data.forEach(v => {
+    const idx = Math.min(bins - 1, Math.max(0, Math.floor((v - min) / bw)));
+    counts[idx]++;
+  });
+  const total = data.length;
+  return counts.map(c => c / (total * bw));
+}
+
+function resetDemo0() {
+  if (anim0) cancelAnimationFrame(anim0);
+  anim0 = null;
+  document.getElementById('epoch0').textContent = '0';
+  document.getElementById('gloss0').textContent = '—';
+  document.getElementById('dloss0').textContent = '—';
+  document.getElementById('kl0').textContent = '—';
+  document.getElementById('epochLabel0').textContent = 'Epoch 0';
+  const { ctx, w, h } = setupCanvas(document.getElementById('canvas0'));
+  ctx.fillStyle = '#222227';
+  ctx.fillRect(0, 0, w, h);
+  drawAxes(ctx, w, h, 'Return (%)', 'Density');
+}
+
+function drawAxes(ctx, w, h, xlabel, ylabel) {
+  const m = { t: 20, r: 30, b: 40, l: 50 };
+  ctx.strokeStyle = 'rgba(185, 217, 235, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(m.l, m.t);
+  ctx.lineTo(m.l, h - m.b);
+  ctx.lineTo(w - m.r, h - m.b);
+  ctx.stroke();
+  ctx.fillStyle = '#B9D9EB';
+  ctx.font = '11px DM Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText(xlabel, (m.l + w - m.r) / 2, h - 8);
+  ctx.save();
+  ctx.translate(14, (m.t + h - m.b) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(ylabel, 0, 0);
+  ctx.restore();
+}
+
+function runDemo0() {
+  if (anim0) cancelAnimationFrame(anim0);
+  const realData = generateRealReturns(5000);
+  const canvas = document.getElementById('canvas0');
+  const speed = () => parseInt(document.getElementById('speed0').value);
+  const bins = 60;
+  const min = -8, max = 8;
+  const realHist = histogram(realData, bins, min, max);
+  const maxDensity = Math.max(...realHist) * 1.2;
+
+  let epoch = 0;
+  const maxEpoch = 200;
+
+  function step() {
+    epoch += speed();
+    if (epoch > maxEpoch) epoch = maxEpoch;
+    const progress = epoch / maxEpoch;
+    const t = Math.pow(progress, 0.7);
+
+    const genData = [];
+    for (let i = 0; i < 5000; i++) {
+      const normal = randn();
+      const fat = fatTailRandom();
+      genData.push(normal * (1 - t) + fat * t + randn() * 0.15 * (1 - t));
+    }
+    const genHist = histogram(genData, bins, min, max);
+
+    const normalPdf = [];
+    const bw = (max - min) / bins;
+    for (let i = 0; i < bins; i++) {
+      const x = min + (i + 0.5) * bw;
+      normalPdf.push(Math.exp(-x * x / (2 * 0.9 * 0.9)) / (0.9 * Math.sqrt(2 * Math.PI)));
+    }
+
+    let kl = 0;
+    for (let i = 0; i < bins; i++) {
+      if (realHist[i] > 0.001 && genHist[i] > 0.001) {
+        kl += realHist[i] * Math.log(realHist[i] / genHist[i]) * bw;
+      }
+    }
+
+    const gLoss = (1.5 * (1 - t) + 0.08 + Math.random() * 0.05).toFixed(3);
+    const dLoss = (0.3 + 0.4 * Math.sin(progress * 5) * (1 - t) + 0.69 * t + Math.random() * 0.03).toFixed(3);
+
+    document.getElementById('epoch0').textContent = epoch;
+    document.getElementById('gloss0').textContent = gLoss;
+    document.getElementById('dloss0').textContent = dLoss;
+    document.getElementById('kl0').textContent = Math.abs(kl).toFixed(4);
+    document.getElementById('epochLabel0').textContent = `Epoch ${epoch}`;
+
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.fillStyle = '#222227';
+    ctx.fillRect(0, 0, w, h);
+    const m = { t: 20, r: 30, b: 40, l: 50 };
+    const pw = w - m.l - m.r;
+    const ph = h - m.t - m.b;
+
+    drawAxes(ctx, w, h, 'Return (%)', 'Density');
+
+    ctx.fillStyle = '#B9D9EB';
+    ctx.font = '10px DM Mono';
+    ctx.textAlign = 'center';
+    for (let x = -6; x <= 6; x += 2) {
+      const px = m.l + ((x - min) / (max - min)) * pw;
+      ctx.fillText(x.toString(), px, h - m.b + 18);
+      ctx.strokeStyle = 'rgba(185, 217, 235, 0.1)';
+      ctx.beginPath(); ctx.moveTo(px, m.t); ctx.lineTo(px, h - m.b); ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#4828FF';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    for (let i = 0; i < bins; i++) {
+      const x = m.l + (i / bins) * pw;
+      const y = h - m.b - (normalPdf[i] / maxDensity) * ph;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.globalAlpha = 0.5;
+    const barW = pw / bins;
+    for (let i = 0; i < bins; i++) {
+      const x = m.l + i * barW;
+      const barH = (realHist[i] / maxDensity) * ph;
+      ctx.fillStyle = '#B9D9EB';
+      ctx.fillRect(x, h - m.b - barH, barW - 1, barH);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = '#5EF38C';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i < bins; i++) {
+      const x = m.l + (i + 0.5) * barW;
+      const y = h - m.b - (genHist[i] / maxDensity) * ph;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.font = '11px DM Mono';
+    ctx.fillStyle = '#4828FF'; ctx.fillText('Normal', w - m.r - 50, m.t + 20);
+    ctx.fillStyle = '#B9D9EB'; ctx.fillText('Real', w - m.r - 50, m.t + 36);
+    ctx.fillStyle = '#5EF38C'; ctx.fillText('GAN', w - m.r - 50, m.t + 52);
+
+    if (epoch < maxEpoch) anim0 = requestAnimationFrame(step);
+  }
+  step();
+}
+
+let anim1 = null;
+
+function realVolSmile(k) {
+  return 0.20 + 0.12 * Math.pow(k - 1, 2) + 0.04 * Math.pow(k - 1, 4) - 0.03 * (k - 1);
+}
+
+function resetDemo1() {
+  if (anim1) cancelAnimationFrame(anim1);
+  anim1 = null;
+  document.getElementById('epoch1').textContent = '0';
+  document.getElementById('gloss1').textContent = '—';
+  document.getElementById('dloss1').textContent = '—';
+  document.getElementById('mse1').textContent = '—';
+  document.getElementById('epochLabel1').textContent = 'Epoch 0';
+  const { ctx, w, h } = setupCanvas(document.getElementById('canvas1'));
+  ctx.fillStyle = '#222227';
+  ctx.fillRect(0, 0, w, h);
+  drawAxes(ctx, w, h, 'Strike / Spot (K/S)', 'Implied Volatility');
+}
+
+function runDemo1() {
+  if (anim1) cancelAnimationFrame(anim1);
+  const canvas = document.getElementById('canvas1');
+  const speed = () => parseInt(document.getElementById('speed1').value);
+  const strikes = [];
+  for (let k = 0.7; k <= 1.3; k += 0.01) strikes.push(k);
+
+  let epoch = 0;
+  const maxEpoch = 200;
+
+  function step() {
+    epoch += speed();
+    if (epoch > maxEpoch) epoch = maxEpoch;
+    const t = Math.pow(epoch / maxEpoch, 0.8);
+
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.fillStyle = '#222227';
+    ctx.fillRect(0, 0, w, h);
+    const m = { t: 20, r: 30, b: 40, l: 60 };
+    const pw = w - m.l - m.r, ph = h - m.t - m.b;
+
+    drawAxes(ctx, w, h, 'Strike / Spot (K/S)', 'Implied Vol');
+
+    ctx.fillStyle = '#B9D9EB';
+    ctx.font = '10px DM Mono';
+    ctx.textAlign = 'center';
+    for (let k = 0.7; k <= 1.3; k += 0.1) {
+      const px = m.l + ((k - 0.7) / 0.6) * pw;
+      ctx.fillText(k.toFixed(1), px, h - m.b + 18);
+      ctx.strokeStyle = 'rgba(185, 217, 235, 0.1)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(px, m.t); ctx.lineTo(px, h - m.b); ctx.stroke();
+    }
+    ctx.textAlign = 'right';
+    for (let v = 0.15; v <= 0.45; v += 0.05) {
+      const py = h - m.b - ((v - 0.1) / 0.4) * ph;
+      ctx.fillText((v * 100).toFixed(0) + '%', m.l - 10, py + 4);
+      ctx.strokeStyle = 'rgba(185, 217, 235, 0.1)';
+      ctx.beginPath(); ctx.moveTo(m.l, py); ctx.lineTo(w - m.r, py); ctx.stroke();
+    }
+
+    ctx.fillStyle = 'rgba(185, 217, 235, 0.6)';
+    strikes.forEach((k, i) => {
+      if (i % 3 !== 0) return;
+      const iv = realVolSmile(k) + randn() * 0.005;
+      const px = m.l + ((k - 0.7) / 0.6) * pw;
+      const py = h - m.b - ((iv - 0.1) / 0.4) * ph;
+      ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fill();
+    });
+
+    ctx.strokeStyle = '#B9D9EB';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    strikes.forEach((k, i) => {
+      const iv = realVolSmile(k);
+      const px = m.l + ((k - 0.7) / 0.6) * pw;
+      const py = h - m.b - ((iv - 0.1) / 0.4) * ph;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+
+    let mse = 0;
+    ctx.strokeStyle = '#5EF38C';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    strikes.forEach((k, i) => {
+      const flatIv = 0.22;
+      const realIv = realVolSmile(k);
+      const genIv = flatIv * (1 - t) + realIv * t + Math.sin(k * 20 + epoch * 0.1) * 0.015 * (1 - t);
+      const px = m.l + ((k - 0.7) / 0.6) * pw;
+      const py = h - m.b - ((genIv - 0.1) / 0.4) * ph;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      mse += Math.pow(genIv - realIv, 2);
+    });
+    ctx.stroke();
+    mse /= strikes.length;
+
+    const gLoss = (0.9 * (1 - t) + 0.05 + Math.random() * 0.03).toFixed(3);
+    const dLoss = (0.5 + 0.2 * t + Math.random() * 0.03).toFixed(3);
+
+    document.getElementById('epoch1').textContent = epoch;
+    document.getElementById('gloss1').textContent = gLoss;
+    document.getElementById('dloss1').textContent = dLoss;
+    document.getElementById('mse1').textContent = mse.toFixed(6);
+    document.getElementById('epochLabel1').textContent = `Epoch ${epoch}`;
+
+    if (epoch < maxEpoch) anim1 = requestAnimationFrame(step);
+  }
+  step();
+}
+
+let anim2 = null;
+
+function generateCorrelatedPairs(n, rho) {
+  const pairs = [];
+  for (let i = 0; i < n; i++) {
+    const z1 = randn();
+    const z2 = randn();
+    const x = z1 * 1.2;
+    const y = (rho * z1 + Math.sqrt(1 - rho * rho) * z2) * 0.8;
+    const x2 = x + 0.1 * x * x * Math.sign(x) * (Math.random() < 0.1 ? 3 : 1);
+    const y2 = y - 0.05 * Math.abs(x) * (x < -1.5 ? 2 : 1);
+    pairs.push([x2, y2]);
+  }
+  return pairs;
+}
+
+function correlation(pairs) {
+  const n = pairs.length;
+  let sx = 0, sy = 0, sxy = 0, sx2 = 0, sy2 = 0;
+  pairs.forEach(([x, y]) => { sx += x; sy += y; sxy += x * y; sx2 += x * x; sy2 += y * y; });
+  return (n * sxy - sx * sy) / Math.sqrt((n * sx2 - sx * sx) * (n * sy2 - sy * sy));
+}
+
+function resetDemo2() {
+  if (anim2) cancelAnimationFrame(anim2);
+  anim2 = null;
+  document.getElementById('epoch2').textContent = '0';
+  document.getElementById('gencorr2').textContent = '—';
+  document.getElementById('cerr2').textContent = '—';
+  document.getElementById('epochLabel2').textContent = 'Epoch 0';
+  const { ctx, w, h } = setupCanvas(document.getElementById('canvas2'));
+  ctx.fillStyle = '#222227';
+  ctx.fillRect(0, 0, w, h);
+}
+
+function runDemo2() {
+  if (anim2) cancelAnimationFrame(anim2);
+  const canvas = document.getElementById('canvas2');
+  const speed = () => parseInt(document.getElementById('speed2').value);
+  const rho = 0.72;
+  const realPairs = generateCorrelatedPairs(300, rho);
+  const realCorr = correlation(realPairs);
+  document.getElementById('realcorr2').textContent = realCorr.toFixed(3);
+
+  let epoch = 0;
+  const maxEpoch = 200;
+
+  function step() {
+    epoch += speed();
+    if (epoch > maxEpoch) epoch = maxEpoch;
+    const t = Math.pow(epoch / maxEpoch, 0.6);
+
+    const genPairs = [];
+    for (let i = 0; i < 300; i++) {
+      const z1 = randn();
+      const z2 = randn();
+      const effRho = rho * t;
+      const x = z1 * (0.6 + 0.6 * t);
+      const y = (effRho * z1 + Math.sqrt(1 - effRho * effRho) * z2) * (0.4 + 0.4 * t);
+      const x2 = x + 0.1 * x * x * Math.sign(x) * t * (Math.random() < 0.1 ? 3 : 1);
+      const y2 = y - 0.05 * Math.abs(x) * t * (x < -1.5 ? 2 : 1);
+      genPairs.push([x2, y2]);
+    }
+    const genCorr = correlation(genPairs);
+
+    document.getElementById('epoch2').textContent = epoch;
+    document.getElementById('gencorr2').textContent = genCorr.toFixed(3);
+    document.getElementById('cerr2').textContent = Math.abs(genCorr - realCorr).toFixed(4);
+    document.getElementById('epochLabel2').textContent = `Epoch ${epoch}`;
+
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.fillStyle = '#222227';
+    ctx.fillRect(0, 0, w, h);
+
+    const m = { t: 20, r: 30, b: 40, l: 50 };
+    const pw = w - m.l - m.r, ph = h - m.t - m.b;
+    const range = 5;
+
+    ctx.strokeStyle = 'rgba(185, 217, 235, 0.1)'; ctx.lineWidth = 1;
+    for (let v = -4; v <= 4; v += 2) {
+      const px = m.l + ((v + range) / (2 * range)) * pw;
+      const py = h - m.b - ((v + range) / (2 * range)) * ph;
+      ctx.beginPath(); ctx.moveTo(px, m.t); ctx.lineTo(px, h - m.b); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(m.l, py); ctx.lineTo(w - m.r, py); ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(185, 217, 235, 0.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(m.l, h - m.b); ctx.lineTo(w - m.r, h - m.b); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(m.l, m.t); ctx.lineTo(m.l, h - m.b); ctx.stroke();
+
+    ctx.fillStyle = '#B9D9EB'; ctx.font = '11px DM Mono'; ctx.textAlign = 'center';
+    ctx.fillText('SPY Return (%)', (m.l + w - m.r) / 2, h - 8);
+    ctx.save(); ctx.translate(14, (m.t + h - m.b) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('TLT Return (%)', 0, 0); ctx.restore();
+
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = '#B9D9EB';
+    realPairs.forEach(([x, y]) => {
+      const px = m.l + ((x + range) / (2 * range)) * pw;
+      const py = h - m.b - ((y + range) / (2 * range)) * ph;
+      ctx.beginPath(); ctx.arc(px, py, 3.5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#5EF38C';
+    genPairs.forEach(([x, y]) => {
+      const px = m.l + ((x + range) / (2 * range)) * pw;
+      const py = h - m.b - ((y + range) / (2 * range)) * ph;
+      ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    if (epoch < maxEpoch) anim2 = requestAnimationFrame(step);
+  }
+  step();
+}
+
+let anim3 = null;
+let demo3Data = null;
+
+function generatePriceSeries() {
+  const n = 200;
+  const prices = [100];
+  const anomalies = new Set();
+  const anomalyIdxs = [42, 43, 89, 90, 91, 130, 165, 166];
+  anomalyIdxs.forEach(i => anomalies.add(i));
+
+  for (let i = 1; i < n; i++) {
+    let ret = randn() * 0.8;
+    if (anomalies.has(i)) {
+      ret = (Math.random() < 0.5 ? -1 : 1) * (3 + Math.random() * 4);
+    }
+    prices.push(prices[i - 1] + ret);
+  }
+  return { prices, anomalies };
+}
+
+function updateThreshold3() {
+  const v = parseInt(document.getElementById('threshold3').value) / 10;
+  document.getElementById('thresh3').textContent = v.toFixed(2);
+  if (demo3Data) drawDemo3(demo3Data, 1);
+}
+
+function resetDemo3() {
+  if (anim3) cancelAnimationFrame(anim3);
+  anim3 = null;
+  demo3Data = null;
+  document.getElementById('nanom3').textContent = '—';
+  document.getElementById('phase3').textContent = 'Idle';
+  const { ctx, w, h } = setupCanvas(document.getElementById('canvas3'));
+  ctx.fillStyle = '#222227';
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawDemo3(data, progress) {
+  const { prices, anomalies } = data;
+  const canvas = document.getElementById('canvas3');
+  const { ctx, w, h } = setupCanvas(canvas);
+  ctx.fillStyle = '#222227';
+  ctx.fillRect(0, 0, w, h);
+
+  const m = { t: 20, r: 30, b: 40, l: 50 };
+  const pw = w - m.l - m.r, ph = h - m.t - m.b;
+  const n = prices.length;
+  const drawN = Math.floor(n * progress);
+  const minP = Math.min(...prices) - 5;
+  const maxP = Math.max(...prices) + 5;
+  const threshold = parseInt(document.getElementById('threshold3').value) / 10;
+
+  const scores = prices.map((_, i) => {
+    if (anomalies.has(i)) return 0.1 + Math.random() * 0.2;
+    return 0.6 + Math.random() * 0.35;
+  });
+
+  ctx.globalAlpha = 0.15;
+  for (let i = 0; i < drawN; i++) {
+    const px = m.l + (i / n) * pw;
+    const bw2 = pw / n + 1;
+    const barH = (scores[i]) * ph;
+    ctx.fillStyle = '#5EF38C';
+    ctx.fillRect(px, h - m.b - barH, bw2, barH);
+  }
+  ctx.globalAlpha = 1;
+
+  const threshY = h - m.b - threshold * ph;
+  ctx.strokeStyle = 'rgba(72, 40, 255, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(m.l, threshY); ctx.lineTo(w - m.r, threshY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#4828FF'; ctx.font = '11px DM Mono';
+  ctx.fillText('threshold', w - m.r - 55, threshY - 8);
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i < drawN; i++) {
+    const px = m.l + (i / n) * pw;
+    const py = h - m.b - ((prices[i] - minP) / (maxP - minP)) * ph;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  let anomCount = 0;
+  for (let i = 0; i < drawN; i++) {
+    const px = m.l + (i / n) * pw;
+    const py = h - m.b - ((prices[i] - minP) / (maxP - minP)) * ph;
+    if (scores[i] < threshold) {
+      anomCount++;
+      ctx.fillStyle = 'rgba(72, 40, 255, 0.3)';
+      ctx.fillRect(px - 2, m.t, pw / n + 4, ph);
+      ctx.fillStyle = '#4828FF';
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#4828FF'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#5EF38C';
+      ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  document.getElementById('nanom3').textContent = anomCount;
+
+  ctx.strokeStyle = 'rgba(185, 217, 235, 0.2)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(m.l, h - m.b); ctx.lineTo(w - m.r, h - m.b); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(m.l, m.t); ctx.lineTo(m.l, h - m.b); ctx.stroke();
+  ctx.fillStyle = '#B9D9EB'; ctx.font = '11px DM Mono'; ctx.textAlign = 'center';
+  ctx.fillText('Time Step', (m.l + w - m.r) / 2, h - 10);
+}
+
+function runDemo3() {
+  if (anim3) cancelAnimationFrame(anim3);
+  demo3Data = generatePriceSeries();
+  let progress = 0;
+  document.getElementById('phase3').textContent = 'Scanning...';
+
+  function step() {
+    progress += 0.012;
+    if (progress > 1) progress = 1;
+    drawDemo3(demo3Data, progress);
+
+    if (progress < 1) {
+      anim3 = requestAnimationFrame(step);
+    } else {
+      document.getElementById('phase3').textContent = 'Complete';
+    }
+  }
+  step();
+}
+
+window.addEventListener('load', () => {
+  resetDemo0();
+  resetDemo1();
+  resetDemo2();
+  resetDemo3();
+});
+window.addEventListener('resize', () => {
+  resetDemo0(); resetDemo1(); resetDemo2(); resetDemo3();
+});
+</script>
+</body>
+</html>
